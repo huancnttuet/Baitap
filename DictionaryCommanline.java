@@ -368,7 +368,7 @@ public class DictionaryCommanline extends DictionaryManagement{
                 }
             } catch (IOException ex) {
                 System.out.println("File không tồn tại");
-                Logger.getLogger(DictionaryCommanline.class.getName()).log(Level.SEVERE, null, ex); 
+                // Logger.getLogger(DictionaryCommanline.class.getName()).log(Level.SEVERE, null, ex); 
             }
         }
         while (!exit);    
@@ -386,12 +386,3 @@ public class DictionaryCommanline extends DictionaryManagement{
         
     }
 }
-
-
-
-
-
-
-
-
-
