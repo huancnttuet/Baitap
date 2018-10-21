@@ -2,6 +2,7 @@ import java.util.*;
 import java.io.*;
 import java.nio.file.Files; 
 import java.nio.file.Paths;
+import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 class Word{
@@ -32,11 +33,22 @@ class Word{
     }
 }
 class Dictionary {
-    
     public ArrayList<Word> listWord = new ArrayList<>();
+    public ArrayList<Word> listWord2 = new ArrayList<>();
     public Dictionary() {
         // Word word = new Word("Hello", "Xin chao");
         // listWord.add(word);
+        
+    }
+    public ArrayList<Word> getListWord(){
+        return this.listWord;
+    }
+    public ArrayList<Word> getListWord2(){
+        return this.listWord2;
+    } 
+    public void insertFromDataBase() throws SQLException, ClassNotFoundException{
+        DataConnection data = new DataConnection();
+        listWord2 = data.getListWordDatabase() ;
     }
     public void insertFromFileAuto() throws IOException{
         
@@ -70,23 +82,18 @@ class Dictionary {
             else{
                 word_explain.append(c);
             }
-        }
-                  
+        }                 
     }
-
 }
 
 class DictionaryManagement extends Dictionary{
-    DictionaryManagement(){}
-    public void insertFromCommanline(){
+    DictionaryManagement()throws SQLException, ClassNotFoundException{}
+    public void insertFromCommanline(String word_target_new, String word_explain_new, ArrayList<Word> listWord){
         System.out.print("Từ mới: "); 
-        Scanner input1 = new Scanner(System.in);  
-        String word_target_new = input1.nextLine();
         System.out.print("Nghĩa: ");
-        Scanner input2 = new Scanner(System.in);
-        String word_explain_new = input2.nextLine();
         Word word_new = new Word(word_target_new, word_explain_new);
         listWord.add(word_new);
+        
     }
 
     public void insertFromFile() throws IOException{
@@ -128,48 +135,14 @@ class DictionaryManagement extends Dictionary{
         System.out.println("Đã nhập vào từ file " + file_name);            
     }
 
-    public int dictionaryFix(){
-        System.out.println("1.Sửa từ tiếng Anh");
-        System.out.println("2.Sửa nghĩa của nó");
-        System.out.println("3.Quay lại");
-        Scanner input = new Scanner(System.in);
-        int inp = input.nextInt();
-        Scanner input1 = new Scanner(System.in);
-        Scanner input2 = new Scanner(System.in);
+    public int dictionaryFix(String word_fix,String word_fixed,ArrayList<Word> listWord){
+        
         int key = 0;
         int num = 0 ;
-        if(inp == 3){
-            return 0;
-        }
-        else if(inp == 2){
-            System.out.print("Nhập từ TA cần sửa : ");
-            String word_fix = input1.nextLine();
-            for(int i = 0; i < listWord.size(); ++i){
-                if(word_fix.equals(listWord.get(i).word_target)){
-                    key = 1;
-                    num = i;
-                    break;
-                }
-            }
+        String mean = "";
         
-            if(key == 1 ){ 
-                System.out.print("Sửa nghĩa của từ đó thành : ");
-                String word_fixed = input2.nextLine();
-                Word word_new = new Word(word_fix,word_fixed);
-                listWord.set(num, word_new);
-                System.out.println("Đã sửa thành công");
-                return 1; 
-            }
-            else{
-                System.out.println("Không tìm thấy từ cần sửa");
-                return 0;
-            }
-        }
-        else if(inp == 1){
             System.out.print("Nhập từ TA cần sửa : ");
-            String word_fix = input1.nextLine();
-            String mean = null;
-           
+            
             for(int i = 0; i < listWord.size(); ++i){
                 if(word_fix.equals(listWord.get(i).word_target)){
                     key = 1;
@@ -178,9 +151,9 @@ class DictionaryManagement extends Dictionary{
                     break;
                 }
             }
-            if(key == 1){
-                System.out.print("Sửa thành : ");
-                String word_fixed = input2.nextLine();
+        
+            if(key == 1 ){ 
+                System.out.print("Sửa từ đó thành : ");
                 Word word_new = new Word(word_fixed,mean);
                 listWord.set(num, word_new);
                 System.out.println("Đã sửa thành công");
@@ -190,17 +163,26 @@ class DictionaryManagement extends Dictionary{
                 System.out.println("Không tìm thấy từ cần sửa");
                 return 0;
             }
-        }
-        System.out.println("ERORR!");
-        return 0;
+        
+//        else if(inp == 1){
+//            System.out.print("Nhập từ TA cần sửa : ");
+//            String word_fix = input1.nextLine();
+//            String mean = null;
+//           
+//            for(int i = 0; i < listWord.size(); ++i){
+//                if(word_fix.equalsIgnoreCase(listWord.get(i).word_target)){
+//                    key = 1;
+//                    num = i;
+//                    mean = listWord.get(i).word_explain;
+//                    break;
+//                }
+//            }
+       
     }
 
-    public void dictionaryDelete(){
-        Scanner input = new Scanner(System.in);
-        System.out.print("Nhập từ cần xóa : ");
-        String word_delete = input.nextLine();
+    public void dictionaryDelete(String input, ArrayList<Word> listWord){
         for(int i = 0 ; i < listWord.size(); ++i){
-            if(word_delete.equals(listWord.get(i).word_target)){
+            if(input.equalsIgnoreCase(listWord.get(i).word_target)){
                 listWord.remove(i);
                 System.out.println("Đã xóa thành công");
                 return;
@@ -209,20 +191,14 @@ class DictionaryManagement extends Dictionary{
         System.out.println("Không tìm thấy từ được xóa.");
     }
 
-    public void dictionaryLookup(){
-        System.out.print("Nhập từ cần tra cứu : ");
-        Scanner input = new Scanner(System.in);
-        String word_lookup = input.nextLine();
-        boolean key = false;
+    public String dictionaryLookup(String word_lookup, ArrayList<Word> listWord){
+        if(word_lookup == null) return "";
         for(int i = 0; i < listWord.size(); ++i) {
-            if(word_lookup.equals(listWord.get(i).word_target)){
-                System.out.print("Nghĩa : ");
-                System.out.println(listWord.get(i).word_explain);
-                key = true;
+            if(word_lookup.equalsIgnoreCase(listWord.get(i).word_target)){
+                return listWord.get(i).word_explain;
             }
         }
-        if(!key)
-        System.out.println("Không tìm thấy");
+        return "";     
     }
 
     public void dictionaryExportToFile(){
@@ -247,21 +223,23 @@ class DictionaryManagement extends Dictionary{
             System.out.println("Lỗi in ra file" + file_name);
         }
     }
+
+
 }
 
 public class DictionaryCommanline extends DictionaryManagement{
-    DictionaryCommanline(){}
-    public void dictionaryBasic(){
-        int numberWord;
-        System.out.print("So luong tu muon nhap : ");
-        Scanner input = new Scanner(System.in);
-        numberWord = input.nextInt();
-        
-        for(int i = 0; i < numberWord; ++i){
-            this.insertFromCommanline();
-        }
-        this.showAllWords();        
-    }
+    DictionaryCommanline() throws SQLException, ClassNotFoundException{}
+//    public void dictionaryBasic(){
+//        int numberWord;
+//        System.out.print("So luong tu muon nhap : ");
+//        Scanner input = new Scanner(System.in);
+//        numberWord = input.nextInt();
+//        
+//        for(int i = 0; i < numberWord; ++i){
+//            this.insertFromCommanline();
+//        }
+//        this.showAllWords();        
+//    }
     public void showAllWords(){
         System.out.println("No  |English    |Vietnamese");
         listWord.forEach((word_print) -> {           
@@ -269,33 +247,52 @@ public class DictionaryCommanline extends DictionaryManagement{
         });        
     }
 
-    public void dictionarySearcher(){
-        Scanner input = new Scanner(System.in);
-        System.out.print("Search: ");
-        String word_search = input.nextLine();
+    public ArrayList<String> dictionarySearcher(String input){
+
         ArrayList<String> listWordSearch = new ArrayList<>();
         for(int i = 0; i < listWord.size(); ++i){
             String temp = listWord.get(i).word_target;
-            if(temp.length() >= word_search.length()){
-                temp = temp.substring(0, word_search.length());
+            if(temp.length() >= input.length()){
+                temp = temp.substring(0, input.length());
             }
             
-            if(word_search.equals(temp)){
+            if(input.equalsIgnoreCase(temp)){
                 listWordSearch.add(listWord.get(i).word_target);
             }
         }
-        if(!listWordSearch.isEmpty()){
-            System.out.println("Kết quả tìm kiếm : ");
-            listWordSearch.forEach((String word_print)->{
-                System.out.println(word_print);
-            });
+        return listWordSearch;
+    }
+    public ArrayList<String> dictionarySearcher2(String input){
+
+        ArrayList<String> listWordSearch = new ArrayList<>();
+        for(int i = 0; i < listWord2.size(); ++i){
+            String temp = listWord2.get(i).word_target;
+            if(temp.length() >= input.length()){
+                temp = temp.substring(0, input.length());
+            }
+            
+            if(input.equalsIgnoreCase(temp)){
+                listWordSearch.add(listWord2.get(i).word_target);
+            }
         }
-        else{
-            System.out.println("Không tìm thấy");
-        }
+        return listWordSearch;
     }
 
-    public void dictionaryUpdate(){
+    public String[] getWordTargets(){
+        String[] s = new String[500000];
+        for(int i = 0; i < listWord.size(); ++i){
+            s[i] = listWord.get(i).word_target;
+        }
+        return s;
+    }
+    public String[] getWordTargets2(){
+        String[] s = new String[500000];
+        for(int i = 0; i < listWord2.size(); ++i){
+            s[i] = listWord2.get(i).word_target;
+        }
+        return s;
+    }
+    public void dictionaryUpdate(ArrayList<Word> listWord){
         try(FileWriter writer = new FileWriter("dictionaries.txt")){
             
             for(int i = 0; i < listWord.size(); ++i){
@@ -312,77 +309,66 @@ public class DictionaryCommanline extends DictionaryManagement{
         }
     }
 
-    public void dictionaryAdvanced(){
+    // public void dictionaryAdvanced(){
         
-        Scanner input = new Scanner(System.in);
-        boolean exit = false;
-        do
-        {
-            try {
-                System.out.println("------------------------------------------");
-                System.out.println("|        TU DIEN                          |");
-                System.out.println("|1.Insert                                 |");
-                System.out.println("|2.Insert from file                       |");
-                System.out.println("|3.Show all words                         |");
-                System.out.println("|4.Lookup                                 |");
-                System.out.println("|5.Fix                                    |");
-                System.out.println("|6.Delete                                 |");
-                System.out.println("|7.Export to file                         |");
-                System.out.println("|8.Search                                 |");
-                System.out.println("|9.Update                                 |");
-                System.out.println("|10.Exit                                  |");
-                System.out.println("------------------------------------------");
+    //     Scanner input = new Scanner(System.in);
+    //     boolean exit = false;
+    //     do
+    //     {
+    //         try {
+    //             System.out.println("------------------------------------------");
+    //             System.out.println("|        TU DIEN                          |");
+    //             System.out.println("|1.Insert                                 |");
+    //             System.out.println("|2.Insert from file                       |");
+    //             System.out.println("|3.Show all words                         |");
+    //             System.out.println("|4.Lookup                                 |");
+    //             System.out.println("|5.Fix                                    |");
+    //             System.out.println("|6.Delete                                 |");
+    //             System.out.println("|7.Export to file                         |");
+    //             System.out.println("|8.Search                                 |");
+    //             System.out.println("|9.Update                                 |");
+    //             System.out.println("|10.Exit                                  |");
+    //             System.out.println("------------------------------------------");
                 
-                int select = input.nextInt();
-                switch (select){
-                    case 1 :
-                        this.dictionaryBasic();
-                        break;
-                    case 2 :
-                        this.insertFromFile();
-                        break;
-                    case 3 :
-                        this.showAllWords();
-                        break;
-                    case 4 :
-                        this.dictionaryLookup();
-                        break;
-                    case 5 :
-                        this.dictionaryFix();
-                        break;
-                    case 6 :
-                        this.dictionaryDelete();
-                        break;
-                    case 7 :
-                        this.dictionaryExportToFile();
-                        break;
-                    case 8 :
-                        this.dictionarySearcher();
-                        break;
-                    case 9 :
-                        this.dictionaryUpdate();
-                        break;
-                    default:
-                        exit = true;
-                        break;
-                }
-            } catch (IOException ex) {
-                System.out.println("File không tồn tại");
-                // Logger.getLogger(DictionaryCommanline.class.getName()).log(Level.SEVERE, null, ex); 
-            }
-        }
-        while (!exit);    
-    }
+    //             int select = input.nextInt();
+    //             switch (select){
+    //                 case 1 :
+    //                     this.dictionaryBasic();
+    //                     break;
+    //                 case 2 :
+    //                     this.insertFromFile();
+    //                     break;
+    //                 case 3 :
+    //                     this.showAllWords();
+    //                     break;
+    //                 case 4 :
+    //                     this.dictionaryLookup();
+    //                     break;
+    //                 case 5 :
+    //                     this.dictionaryFix();
+    //                     break;
+    //                 case 6 :
+    //                     this.dictionaryDelete();
+    //                     break;
+    //                 case 7 :
+    //                     this.dictionaryExportToFile();
+    //                     break;
+    //                 case 8 :
+    //                     this.dictionarySearcher();
+    //                     break;
+    //                 case 9 :
+    //                     this.dictionaryUpdate();
+    //                     break;
+    //                 default:
+    //                     exit = true;
+    //                     break;
+    //             }
+    //         } catch (IOException ex) {
+    //             System.out.println("File không tồn tại");
+    //             // Logger.getLogger(DictionaryCommanline.class.getName()).log(Level.SEVERE, null, ex); 
+    //         }
+    //     }
+    //     while (!exit);    
+    // }
 
-    public static void main(String[] args) {
-        DictionaryCommanline test = new DictionaryCommanline();
-        try{
-            test.insertFromFileAuto();
-        } catch(IOException e){
-            System.out.print("ERORR");
-        }
-        
-        test.dictionaryAdvanced();  
-        
-    }
 }
